@@ -10,15 +10,16 @@ from pykml.factory import KML_ElementMaker as KML
 from collections import defaultdict
 import itertools
 import os
+import arcpy
 
 def main():
     args = get_arguments()
     with open(args.input_path, "r") as csv_file:
-        # check if args.name is a real header, throw this error if it isn't and exit
         csv_dict = csv.DictReader(csv_file)
         csv_dict1, csv_dict2 = itertools.tee(csv_dict, 2) #copying iterator to keep beachball and kml generation separate (slower but easier to read)
         make_beachballs(csv_dict1, args) #no return value, saves beachballs to output directory path
         create_kml(csv_dict2, args) #no return value, saves .kml to output directory path
+        arcpy.conversion.KMLToLayer('{}/doc.kml'.format(args.output_path), args.output_path, 'Beachballs', args.groundoverlay)
 
 #see pykml documentation for reference
 def create_kml(csv_dict, args):
@@ -99,6 +100,8 @@ def get_arguments():
     parser.add_argument('-s', '--scale', type=float, default=1.0, help='scale factor of beachballs on map as a decimal value where 1 is al size (default 1)')
     parser.add_argument('-c', '--color',  type=str, default='k', help='face color of beachball(default black)')
     parser.add_argument('-n', '--name', type=str, default='origin.evid', help='name of header in the CSV file to name images after (default origin.evid)')
+    parser.add_argument('-g', '--groundoverlay',  type=bool, default=False, help='Toggle groundoverlay for arcpy layer conversion (default False)')
+
     return parser.parse_args()
 
 if __name__ == "__main__":
